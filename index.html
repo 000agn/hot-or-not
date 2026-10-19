@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#121213">
+<title>Hot or Not?</title>
+<style>
+
+  :root {
+    /* Colours */
+    --color-bg: #121213;
+    --color-surface: #1a1a1b;
+    --color-tile: #3a3a3c;
+    --color-tile-dark: #2a2a2c;
+    --color-border: #3a3a3c;
+    --color-success: #538d4e;
+    --color-warning: #b59f3b;
+    --color-danger: #c44536;
+    --color-absent: #3a3a3c;
+    --color-text: #ffffff;
+    --color-text-on-accent: #121213;
+    --color-muted: #818384;
+    --color-player-1: #6aaa64;
+    --color-player-2: #c9b458;
+    --color-player-1-bg: rgba(106, 170, 100, 0.22);
+    --color-player-2-bg: rgba(201, 180, 88, 0.22);
+    --color-key: #565758;
+    --color-key-num: #818384;
+    --color-key-action: #565758;
+    --color-accent-soft: rgba(83, 141, 78, 0.28);
+    --color-range-a: #6aaa64;
+    --color-range-b: #c9b458;
+    --color-focus: #538d4e;
+    /* Aliases used by components */
+    --color-correct: var(--color-success);
+    --color-present: var(--color-warning);
+
+    /* Typography */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-size-base: 16px;
+    --font-size-xs: 0.7rem;
+    --font-size-sm: 0.85rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.35rem;
+    --font-size-xl: 1.6rem;
+    --font-size-2xl: 2rem;
+    --font-size-key: 1.4rem;
+    --font-weight-normal: 400;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-black: 800;
+    --letter-spacing-title: 0.12em;
+    --letter-spacing-display: 0.18em;
+    --letter-spacing-label: 0.06em;
+    --letter-spacing-answer: 0.1em;
+
+    /* Radii */
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 999px;
+
+    /* Spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --gap-key: 8px;
+    --gap-tight: 6px;
+    --pad-page-x: 14px;
+    --pad-btn-y: 12px;
+    --pad-btn-x: 20px;
+    --app-max-width: 480px;
+    --tap-min: 48px;
+    --key-min: 56px;
+    --display-min: 68px;
+    --answer-min: 88px;
+    --history-max: 180px;
+    --range-bar-h: 12px;
+    --confirm-min: 52px;
+    --hist-tile-min: 32px;
+
+    /* Effects */
+    --border-width: 2px;
+    --transition-fast: 0.15s ease;
+    --transition-range: 0.3s ease;
+    --anim-flip: 0.45s ease;
+
+    /* Safe areas */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: var(--safe-top) var(--pad-page-x) var(--safe-bottom);
+    min-height: 100dvh;
+  }
+  #app {
+    width: 100%;
+    max-width: var(--app-max-width);
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding-bottom: var(--space-2);
+  }
+  .screen { display: none; flex-direction: column; flex: 1; }
+  .screen.active { display: flex; }
+
+  header.top {
+    text-align: center;
+    padding: var(--space-3) 0 var(--space-2);
+    border-bottom: 1px solid var(--color-tile-dark);
+    margin-bottom: var(--space-3);
+  }
+  header.top h1 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-title);
+    text-transform: uppercase;
+  }
+  .brand-mark {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-xs);
+    background: var(--color-success);
+    margin-right: var(--space-2);
+    vertical-align: middle;
+  }
+
+  .turn-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-md);
+    margin-bottom: var(--space-3);
+  }
+  .turn-bar.p1 {
+    background: var(--color-player-1-bg);
+    color: var(--color-player-1);
+    border: 1px solid var(--color-player-1);
+  }
+  .turn-bar.p2 {
+    background: var(--color-player-2-bg);
+    color: var(--color-player-2);
+    border: 1px solid var(--color-player-2);
+  }
+
+  .range-display { text-align: center; margin-bottom: 10px; }
+  .range-display .label {
+    color: var(--color-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-1);
+  }
+  .range-display .values {
+    font-size: 1.4rem;
+    font-weight: var(--font-weight-bold);
+    font-variant-numeric: tabular-nums;
+  }
+  .range-bar-wrap {
+    height: var(--range-bar-h);
+    background: var(--color-tile-dark);
+    border-radius: var(--radius-pill);
+    position: relative;
+    overflow: hidden;
+    margin: var(--space-2) 0 var(--space-4);
+  }
+  .range-bar-fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--color-range-a), var(--color-range-b));
+    border-radius: var(--radius-pill);
+    transition: left var(--transition-range), width var(--transition-range);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--tap-min);
+    padding: var(--pad-btn-y) var(--pad-btn-x);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-tile);
+    cursor: pointer;
+    width: 100%;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .btn:active { opacity: 0.85; transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--color-success); }
+  .btn-yellow { background: var(--color-warning); color: var(--color-text-on-accent); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-muted);
+  }
+  .btn-row { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+  .btn-row .btn { flex: 1; }
+
+  .toggle-group {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 var(--space-5);
+  }
+  .toggle-group .btn {
+    flex: 1;
+    background: var(--color-tile-dark);
+    border: var(--border-width) solid transparent;
+  }
+  .toggle-group .btn.selected {
+    border-color: var(--color-success);
+    background: var(--color-accent-soft);
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    color: var(--color-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--gap-tight);
+  }
+  .field input[type="text"] {
+    width: 100%;
+    min-height: var(--tap-min);
+    padding: var(--space-3) 14px;
+    font-size: var(--font-size-base);
+    font-family: var(--font-sans);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-tile-dark);
+    color: var(--color-text);
+    outline: none;
+  }
+  .field input:focus { border-color: var(--color-focus); }
+
+  .secret-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: var(--display-min);
+    background: var(--color-surface);
+    border: 1px solid var(--color-tile-dark);
+    border-radius: var(--radius-lg);
+    margin: var(--space-3) 0;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-display);
+    font-variant-numeric: tabular-nums;
+  }
+  .secret-display .digits { min-width: 4ch; text-align: center; }
+  .secret-display .digits.placeholder { color: var(--color-muted); }
+  .eye-btn {
+    background: none;
+    border: none;
+    color: var(--color-muted);
+    font-size: var(--font-size-key);
+    cursor: pointer;
+    padding: var(--space-2);
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-key);
+    margin: var(--space-3) 0;
+  }
+  .key {
+    min-height: var(--key-min);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--color-key-num);
+    color: var(--color-text);
+    font-size: var(--font-size-key);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-sans);
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .key:active { opacity: 0.8; }
+  .key.action {
+    background: var(--color-key-action);
+    font-size: 0.95rem;
+  }
+  .key.confirm {
+    background: var(--color-success);
+    grid-column: span 3;
+    min-height: var(--confirm-min);
+  }
+
+  .cover {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: var(--space-5);
+    padding: var(--space-6);
+  }
+  .cover h2 { font-size: var(--font-size-xl); }
+  .cover p { color: var(--color-muted); max-width: 280px; }
+
+  .answer-tile {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--answer-min);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-black);
+    letter-spacing: var(--letter-spacing-answer);
+    margin: var(--space-3) 0;
+    animation: flipIn var(--anim-flip);
+  }
+  .answer-tile.show { display: flex; }
+  .answer-tile.yes { background: var(--color-success); color: var(--color-text); }
+  .answer-tile.no { background: var(--color-absent); color: var(--color-text); }
+  .answer-tile.exact { background: var(--color-success); color: var(--color-text); }
+  .answer-tile.miss { background: var(--color-warning); color: var(--color-text-on-accent); }
+  @keyframes flipIn {
+    0% { transform: rotateX(90deg); opacity: 0; }
+    100% { transform: rotateX(0); opacity: 1; }
+  }
+
+  .mode-tabs {
+    display: flex;
+    gap: var(--gap-tight);
+    margin-bottom: 10px;
+  }
+  .mode-tabs .btn {
+    flex: 1;
+    min-height: 44px;
+    font-size: 0.9rem;
+    background: var(--color-tile-dark);
+    border: var(--border-width) solid transparent;
+  }
+  .mode-tabs .btn.active {
+    border-color: var(--color-text);
+    background: var(--color-tile);
+  }
+
+  .history {
+    flex: 1;
+    overflow-y: auto;
+    margin: var(--space-2) 0;
+    max-height: var(--history-max);
+  }
+  .history-title {
+    color: var(--color-muted);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-label);
+    margin-bottom: var(--gap-tight);
+  }
+  .hist-row {
+    display: flex;
+    gap: var(--space-1);
+    margin-bottom: var(--space-1);
+    align-items: center;
+  }
+  .hist-who {
+    width: 28px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-muted);
+    flex-shrink: 0;
+  }
+  .hist-tile {
+    flex: 1;
+    min-height: var(--hist-tile-min);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-xs);
+    background: var(--color-tile);
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-semibold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-tight);
+  }
+  .hist-tile.yes, .hist-tile.exact { background: var(--color-success); }
+  .hist-tile.no { background: var(--color-absent); }
+  .hist-tile.miss { background: var(--color-warning); color: var(--color-text-on-accent); }
+  .hist-ans {
+    font-weight: var(--font-weight-black);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.04em;
+  }
+
+  .warn {
+    color: var(--color-warning);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    min-height: 1.2em;
+    margin: var(--space-1) 0;
+  }
+
+  .win-screen {
+    text-align: center;
+    padding: var(--space-6) var(--space-2);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+  .win-screen h2 {
+    font-size: var(--font-size-2xl);
+    color: var(--color-success);
+  }
+  .win-screen .reveal {
+    background: var(--color-surface);
+    border: 1px solid var(--color-tile-dark);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    width: 100%;
+    margin: var(--space-2) 0;
+  }
+  .win-screen .reveal div { margin: var(--gap-tight) 0; }
+  .win-screen .stat { color: var(--color-muted); }
+
+  .setup-body, .lock-body, .turn-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .spacer { flex: 1; }
+  .tagline {
+    color: var(--color-warning);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    text-align: center;
+    margin: var(--space-1) 0 var(--space-3);
+    letter-spacing: 0.02em;
+  }
+  .hint {
+    color: var(--color-muted);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    margin-bottom: var(--space-2);
+  }
+  .new-game-link {
+    margin-top: auto;
+    padding-top: var(--space-3);
+  }
+
+  /* Online-specific */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-label);
+    background: var(--color-tile-dark);
+    color: var(--color-muted);
+    margin: 0 auto var(--space-3);
+  }
+  .status-pill .dot {
+    width: 8px; height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-muted);
+  }
+  .status-pill.connecting .dot { background: var(--color-warning); }
+  .status-pill.connected .dot { background: var(--color-success); }
+  .status-pill.disconnected .dot { background: var(--color-danger); }
+  .status-pill.connected { color: var(--color-success); }
+  .status-pill.disconnected { color: var(--color-danger); }
+  .status-pill.connecting { color: var(--color-warning); }
+
+  .room-code {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-black);
+    letter-spacing: 0.2em;
+    text-align: center;
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-tile-dark);
+    border-radius: var(--radius-lg);
+    margin: var(--space-3) 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .waiting-card {
+    text-align: center;
+    padding: var(--space-6) var(--space-3);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+  .home-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); }
+  .mode-label {
+    color: var(--color-muted);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-label);
+    margin: var(--space-4) 0 var(--space-2);
+    text-align: center;
+  }
+  .turn-bar.waiting {
+    background: var(--color-tile-dark);
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+  }
+  .error-banner {
+    background: rgba(196, 69, 54, 0.2);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    text-align: center;
+    margin: var(--space-2) 0;
+    font-size: var(--font-size-sm);
+  }
+
+  .room-code-input {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: var(--font-weight-bold);
+  }
+
+</style>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  'use strict';
+
+  // ——— Configurable broker (cloud by default; override for local peer server) ———
+  var PEER_BROKER = {
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true,
+    key: 'peerjs',
+    debug: 1,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+      ]
+    }
+  };
+  // 'peerjs' = WebRTC via PeerJS cloud (production).
+  // 'broadcast' = same-browser BroadcastChannel shim for headless tests when WebRTC/ICE is unavailable.
+  var TRANSPORT_MODE = (function () {
+    try {
+      var q = new URLSearchParams(location.search).get('transport');
+      if (q === 'broadcast' || q === 'peerjs') return q;
+    } catch (e) {}
+    return 'peerjs';
+  })();
+  var PEER_ID_PREFIX = 'hotornot-';
+  var QUEUE_ID_PREFIX = 'hotornot-q-'; // lobby ids: hotornot-q-<range>-<slot>
+  var QUEUE_SLOT_COUNT = 20;
+  var QUEUE_SLOT_TIMEOUT_MS = 1500;
+  var CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var STORAGE_KEY = 'hotOrNot_online_v1';
+  var LOCAL_STORAGE_KEY = 'hotOrNot_v1';
+
+  // ——— Shared helpers ———
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        if (k === 'className') e.className = attrs[k];
+        else if (k === 'textContent') e.textContent = attrs[k];
+        else if (k === 'innerHTML') e.innerHTML = attrs[k];
+        else if (k.indexOf('on') === 0 && typeof attrs[k] === 'function') {
+          e.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+        } else if (k === 'disabled') {
+          if (attrs[k]) e.setAttribute('disabled', 'disabled');
+        } else if (k === 'value') {
+          e.value = attrs[k];
+        } else {
+          e.setAttribute(k, attrs[k]);
+        }
+      });
+    }
+    if (children) {
+      children.forEach(function (c) {
+        if (c == null) return;
+        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+        else e.appendChild(c);
+      });
+    }
+    return e;
+  }
+
+  function genCode() {
+    var s = '';
+    for (var i = 0; i < 5; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+    return s;
+  }
+
+  function parseVal(str) {
+    if (str === '' || str == null) return null;
+    var n = parseInt(str, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function maskDigits(str, show) {
+    if (!str) return '·';
+    return show ? str : str.replace(/./g, '•');
+  }
+
+  function evaluateSecret(secret, type, x) {
+    if (type === 'guess') return x === secret ? 'exact' : 'miss';
+    if (type === 'higher') return secret > x ? 'yes' : 'no';
+    if (type === 'lower') return secret < x ? 'yes' : 'no';
+    return 'no';
+  }
+
+  function applyAnswerToRange(r, type, x, answer) {
+    if (answer === 'yes') {
+      if (type === 'higher') r.min = Math.max(r.min, x + 1);
+      else if (type === 'lower') r.max = Math.min(r.max, x - 1);
+    } else if (answer === 'no') {
+      if (type === 'higher') r.max = Math.min(r.max, x);
+      else if (type === 'lower') r.min = Math.max(r.min, x);
+    }
+  }
+
+  function isPointless(range, type, x, rangeMax) {
+    if (type === 'guess') {
+      if (x < range.min || x > range.max) return 'X is outside the known range (' + range.min + '–' + range.max + ').';
+      return null;
+    }
+    if (type === 'higher') {
+      if (x < range.min - 1) return 'Already known: always YES (range starts at ' + range.min + ').';
+      if (x >= range.max) return 'Already known: always NO (range ends at ' + range.max + ').';
+      if (x < 0 || x > rangeMax) return 'X must be within 0–' + rangeMax + '.';
+      return null;
+    }
+    if (type === 'lower') {
+      if (x > range.max + 1) return 'Already known: always YES (range ends at ' + range.max + ').';
+      if (x <= range.min) return 'Already known: always NO (range starts at ' + range.min + ').';
+      if (x < 0 || x > rangeMax) return 'X must be within 0–' + rangeMax + '.';
+      return null;
+    }
+    return null;
+  }
+
+  // ——— App state ———
+  var app = {
+    mode: 'home', // home | create | join | wait | local | online | match | matchsetup
+    screen: 'home',
+    error: '',
+    connStatus: 'idle', // idle | connecting | connected | disconnected
+    roomCode: '',
+    rangeMax: 1000,
+    myName: '',
+    oppName: '',
+    role: null, // host | guest
+    myIndex: 0,
+    mySecret: null, // NEVER sent until reveal
+    oppSecret: null, // only after win
+    locked: false,
+    oppLocked: false,
+    currentPlayer: 0,
+    history: [],
+    // ranges[i] = known range of opponent from player i's perspective
+    ranges: [{ min: 0, max: 1000 }, { min: 0, max: 1000 }],
+    turnCount: 0,
+    lastAnswer: null,
+    phase: 'home', // home | lock | waitOppLock | turn | answer | win | handoff (local) | matchmaking
+    pendingAsk: null,
+    msgLog: [], // for tests: all outbound+inbound messages
+    starter: 0,
+    local: null, // pass-and-play sub-state
+    match: {
+      active: false,
+      status: '', // scanning | waiting | matched | cancelled
+      slot: -1,
+      startedAt: 0,
+      elapsed: 0
+    }
+  };
+
+  var ui = { keypadValue: '', showSecret: false, askMode: 'higher', _warn: '' };
+  var peer = null;
+  var conn = null;
+  var reconnectTimer = null;
+  var destroyed = false;
+
+  function logMsg(dir, msg) {
+    app.msgLog.push({ dir: dir, msg: JSON.parse(JSON.stringify(msg)), t: Date.now() });
+    if (app.msgLog.length > 200) app.msgLog.shift();
+  }
+
+  function send(msg) {
+    if (!conn || !conn.open) return false;
+    logMsg('out', msg);
+    conn.send(msg);
+    return true;
+  }
+
+  function myRange() {
+    return app.ranges[app.myIndex];
+  }
+
+  function oppIndex() {
+    return app.myIndex === 0 ? 1 : 0;
+  }
+
+  // ——— Peer helpers ———
+
+  // ——— BroadcastChannel Peer shim (test transport when WebRTC unavailable) ———
+  var BroadcastPeerRegistry = (function () {
+    var LS_KEY = 'hotornot-bcast-peers-v1';
+    var bus = new BroadcastChannel('hotornot-peer-shim-v1');
+    var peers = {}; // local page instances
+
+    function readMap() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) { return {}; }
+    }
+    function writeMap(map) {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(map)); } catch (e) {}
+    }
+    function prune(map) {
+      var now = Date.now();
+      Object.keys(map).forEach(function (k) {
+        if (now - map[k] > 120000) delete map[k];
+      });
+      return map;
+    }
+    function claim(id) {
+      var map = prune(readMap());
+      if (map[id]) return false;
+      map[id] = Date.now();
+      writeMap(map);
+      return true;
+    }
+    function release(id) {
+      var map = readMap();
+      delete map[id];
+      writeMap(map);
+    }
+    function touch(id) {
+      var map = readMap();
+      if (map[id]) { map[id] = Date.now(); writeMap(map); }
+    }
+
+    bus.onmessage = function (ev) {
+      var msg = ev.data;
+      if (!msg || !msg.v) return;
+      if (msg.v === 'connect') {
+        var host = peers[msg.to];
+        if (host && host._acceptConn) {
+          host._acceptConn(msg);
+        } else {
+          bus.postMessage({ v: 'connect-nack', connId: msg.connId, to: msg.from });
+        }
+      }
+    };
+
+    return {
+      bus: bus,
+      peers: peers,
+      claim: claim,
+      release: release,
+      touch: touch,
+      register: function (id, peer) { peers[id] = peer; },
+      unregister: function (id) { delete peers[id]; release(id); }
+    };
+  })();
+
+  function BroadcastConn(localId, remoteId, connId) {
+    this.peer = remoteId;
+    this.open = false;
+    this._local = localId;
+    this._remote = remoteId;
+    this._connId = connId;
+    this._handlers = { data: [], open: [], close: [], error: [] };
+    var self = this;
+    this._onBus = function (ev) {
+      var msg = ev.data;
+      if (!msg || msg.v !== 'data' || msg.connId !== self._connId) return;
+      if (msg.to !== self._local) return;
+      self._handlers.data.forEach(function (fn) { try { fn(msg.payload); } catch (e) {} });
+    };
+    BroadcastPeerRegistry.bus.addEventListener('message', this._onBus);
+  }
+  BroadcastConn.prototype.on = function (evt, fn) {
+    if (!this._handlers[evt]) this._handlers[evt] = [];
+    this._handlers[evt].push(fn);
+    if (evt === 'open' && this.open) try { fn(); } catch (e) {}
+  };
+  BroadcastConn.prototype._markOpen = function () {
+    if (this.open) return;
+    this.open = true;
+    var hs = this._handlers.open.slice();
+    hs.forEach(function (fn) { try { fn(); } catch (e) {} });
+  };
+  BroadcastConn.prototype.send = function (payload) {
+    BroadcastPeerRegistry.bus.postMessage({
+      v: 'data', connId: this._connId, to: this._remote, from: this._local, payload: payload
+    });
+  };
+  BroadcastConn.prototype.close = function () {
+    this.open = false;
+    try { BroadcastPeerRegistry.bus.removeEventListener('message', this._onBus); } catch (e) {}
+    this._handlers.close.forEach(function (fn) { try { fn(); } catch (e) {} });
+  };
+
+  function BroadcastPeer(id, opts) {
+    if (id && typeof id === 'object' && !opts) { opts = id; id = null; }
+    this.id = id || ('ephem-' + Math.random().toString(36).slice(2, 10));
+    this._handlers = { open: [], connection: [], error: [] };
+    this._conns = {};
+    this.destroyed = false;
+    var self = this;
+
+    this._acceptConn = function (msg) {
+      var conn = new BroadcastConn(self.id, msg.from, msg.connId);
+      self._conns[msg.connId] = conn;
+      BroadcastPeerRegistry.bus.postMessage({
+        v: 'connect-ack', connId: msg.connId, to: msg.from, from: self.id
+      });
+      self._handlers.connection.forEach(function (fn) { try { fn(conn); } catch (e) {} });
+      setTimeout(function () { conn._markOpen(); }, 0);
+    };
+
+    var start = function () {
+      if (id) {
+        if (!BroadcastPeerRegistry.claim(id)) {
+          setTimeout(function () {
+            self._handlers.error.forEach(function (fn) { try { fn({ type: 'unavailable-id' }); } catch (e) {} });
+          }, 0);
+          return;
+        }
+      }
+      BroadcastPeerRegistry.register(self.id, self);
+      setTimeout(function () {
+        self._handlers.open.forEach(function (fn) { try { fn(self.id); } catch (e) {} });
+      }, 0);
+    };
+    start();
+  }
+  BroadcastPeer.prototype.on = function (evt, fn) {
+    if (!this._handlers[evt]) this._handlers[evt] = [];
+    this._handlers[evt].push(fn);
+  };
+  BroadcastPeer.prototype.connect = function (remoteId) {
+    var connId = 'c-' + Math.random().toString(36).slice(2, 10);
+    var conn = new BroadcastConn(this.id, remoteId, connId);
+    this._conns[connId] = conn;
+    var attempts = 0;
+    var bus = BroadcastPeerRegistry.bus;
+    var onAck = function (ev) {
+      var msg = ev.data;
+      if (!msg || msg.connId !== connId) return;
+      if (msg.v === 'connect-ack' && msg.to === conn._local) {
+        bus.removeEventListener('message', onAck);
+        conn._markOpen();
+      } else if (msg.v === 'connect-nack' && msg.to === conn._local) {
+        attempts += 1;
+        if (attempts < 40) {
+          setTimeout(function () {
+            bus.postMessage({ v: 'connect', from: conn._local, to: remoteId, connId: connId });
+          }, 50);
+        } else {
+          bus.removeEventListener('message', onAck);
+          conn._handlers.error.forEach(function (fn) { try { fn(new Error('connect failed')); } catch (e) {} });
+        }
+      }
+    };
+    bus.addEventListener('message', onAck);
+    bus.postMessage({ v: 'connect', from: this.id, to: remoteId, connId: connId });
+    return conn;
+  };
+  BroadcastPeer.prototype.destroy = function () {
+    this.destroyed = true;
+    BroadcastPeerRegistry.unregister(this.id);
+    var self = this;
+    Object.keys(this._conns).forEach(function (k) {
+      try { self._conns[k].close(); } catch (e) {}
+    });
+  };
+
+  function PeerFactory(id, opts) {
+    if (TRANSPORT_MODE === 'broadcast') {
+      if (id && typeof id === 'object' && !opts) return new BroadcastPeer(id);
+      return new BroadcastPeer(id, opts);
+    }
+    if (typeof Peer === 'undefined') throw new Error('PeerJS not loaded');
+    if (id && typeof id === 'object' && !opts) return new Peer(id);
+    if (id) return new Peer(id, opts);
+    return new Peer(opts);
+  }
+
+  function peerOptions() {
+    return {
+      host: PEER_BROKER.host,
+      port: PEER_BROKER.port,
+      path: PEER_BROKER.path,
+      secure: PEER_BROKER.secure,
+      key: PEER_BROKER.key,
+      debug: PEER_BROKER.debug,
+      config: PEER_BROKER.config
+    };
+  }
+
+  /**
+   * Matchmaking over PeerJS public broker using well-known lobby peer ids.
+   * Swappable later for a real server — call Matchmaker.findMatch / cancel.
+   *
+   * Lobby id: hotornot-q-<rangeMax>-<slot> for slot in 0..QUEUE_SLOT_COUNT-1
+   * Protocol:
+   *   seeker -> waiter: {type:'mm-hello', name, rangeMax}
+   *   waiter -> seeker: {type:'mm-join', roomCode, hostName}  (accepted)
+   *   waiter -> seeker: {type:'mm-busy'} (already matched)
+   * After accept, waiter hosts a fresh game peer hotornot-<CODE> and frees the lobby id.
+   */
+  var Matchmaker = (function () {
+    var cancelled = false;
+    var lobbyPeer = null;
+    var scanPeer = null;
+    var timerIv = null;
+    var matchCb = null;
+
+    function lobbyId(rangeMax, slot) {
+      return QUEUE_ID_PREFIX + rangeMax + '-' + slot;
+    }
+
+    function cleanupScan() {
+      try { if (scanPeer) scanPeer.destroy(); } catch (e) {}
+      scanPeer = null;
+    }
+
+    function cleanupLobby() {
+      try { if (lobbyPeer) lobbyPeer.destroy(); } catch (e) {}
+      lobbyPeer = null;
+    }
+
+    function stopTimer() {
+      if (timerIv) { clearInterval(timerIv); timerIv = null; }
+    }
+
+    function cancel() {
+      cancelled = true;
+      stopTimer();
+      cleanupScan();
+      cleanupLobby();
+      app.match.active = false;
+      app.match.status = 'cancelled';
+    }
+
+    function startElapsed() {
+      app.match.startedAt = Date.now();
+      app.match.elapsed = 0;
+      stopTimer();
+      timerIv = setInterval(function () {
+        if (!app.match.active) return;
+        app.match.elapsed = Math.floor((Date.now() - app.match.startedAt) / 1000);
+        render();
+      }, 500);
+    }
+
+    function tryConnectSlot(rangeMax, slot, name) {
+      return new Promise(function (resolve) {
+        if (cancelled) return resolve({ kind: 'cancel' });
+        cleanupScan();
+        var done = false;
+        var finish = function (result) {
+          if (done) return;
+          done = true;
+          clearTimeout(to);
+          try { if (scanPeer) scanPeer.destroy(); } catch (e) {}
+          scanPeer = null;
+          resolve(result);
+        };
+        var to = setTimeout(function () { finish({ kind: 'timeout' }); }, QUEUE_SLOT_TIMEOUT_MS);
+
+        scanPeer = PeerFactory(peerOptions());
+        scanPeer.on('error', function (err) {
+          var t = (err && err.type) || '';
+          if (t === 'peer-unavailable' || String(t).indexOf('unavailable') >= 0) {
+            finish({ kind: 'empty' });
+          } else {
+            finish({ kind: 'error' });
+          }
+        });
+        scanPeer.on('open', function () {
+          if (cancelled) return finish({ kind: 'cancel' });
+          var target = lobbyId(rangeMax, slot);
+          // Fast-path: if using broadcast shim, skip connect when lobby id not claimed
+          if (TRANSPORT_MODE === 'broadcast') {
+            try {
+              var map = JSON.parse(localStorage.getItem('hotornot-bcast-peers-v1') || '{}');
+              if (!map[target]) return finish({ kind: 'empty' });
+            } catch (e) {}
+          }
+          var c = scanPeer.connect(target, { reliable: true });
+          var opened = false;
+          c.on('open', function () {
+            opened = true;
+            c.send({ type: 'mm-hello', name: name, rangeMax: rangeMax });
+          });
+          c.on('data', function (raw) {
+            var msg = raw;
+            if (typeof raw === 'string') {
+              try { msg = JSON.parse(raw); } catch (e) { return; }
+            }
+            if (!msg || !msg.type) return;
+            if (msg.type === 'mm-join' && msg.roomCode) {
+              finish({ kind: 'join', roomCode: msg.roomCode, hostName: msg.hostName || 'Opponent' });
+            } else if (msg.type === 'mm-busy') {
+              finish({ kind: 'busy' });
+            }
+          });
+          c.on('error', function () { finish({ kind: 'error' }); });
+          c.on('close', function () {
+            if (!opened) finish({ kind: 'empty' });
+            else if (!done) finish({ kind: 'busy' });
+          });
+        });
+      });
+    }
+
+    function claimSlot(rangeMax, slot) {
+      return new Promise(function (resolve) {
+        if (cancelled) return resolve({ kind: 'cancel' });
+        var id = lobbyId(rangeMax, slot);
+        var p = PeerFactory(id, peerOptions());
+        var settled = false;
+        var to = setTimeout(function () {
+          if (settled) return;
+          settled = true;
+          try { p.destroy(); } catch (e) {}
+          resolve({ kind: 'timeout' });
+        }, QUEUE_SLOT_TIMEOUT_MS + 1000);
+
+        p.on('open', function () {
+          if (settled) return;
+          settled = true;
+          clearTimeout(to);
+          resolve({ kind: 'claimed', peer: p, slot: slot });
+        });
+        p.on('error', function (err) {
+          var t = (err && err.type) || '';
+          if (t === 'unavailable-id' || String(t).indexOf('unavailable') >= 0) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(to);
+            try { p.destroy(); } catch (e) {}
+            resolve({ kind: 'taken' });
+          }
+        });
+      });
+    }
+
+    function hostLobby(peer, slot, rangeMax, name, onMatched) {
+      lobbyPeer = peer;
+      app.match.slot = slot;
+      app.match.status = 'waiting';
+      var matched = false;
+      var gamePeer = null;
+
+      peer.on('connection', function (c) {
+        c.on('open', function () {
+          // wait for mm-hello
+        });
+        c.on('data', function (raw) {
+          var msg = raw;
+          if (typeof raw === 'string') {
+            try { msg = JSON.parse(raw); } catch (e) { return; }
+          }
+          if (!msg || msg.type !== 'mm-hello') return;
+          if (msg.rangeMax && msg.rangeMax !== rangeMax) {
+            c.send({ type: 'mm-busy' });
+            return;
+          }
+          if (matched) {
+            c.send({ type: 'mm-busy' });
+            return;
+          }
+          matched = true;
+          app.match.status = 'matched';
+          // Create dedicated game host peer, then redirect joiner
+          var code = genCode();
+          var gid = PEER_ID_PREFIX + code;
+          gamePeer = PeerFactory(gid, peerOptions());
+          // Attach game connection handler before inviting the joiner
+          var gameConnWired = false;
+          gamePeer.on('connection', function (gc) {
+            if (gameConnWired) {
+              gc.on('open', function () {
+                gc.send({ type: 'error', message: 'Room already has a player.' });
+                setTimeout(function () { gc.close(); }, 300);
+              });
+              return;
+            }
+            gameConnWired = true;
+            // Stash for startMatchmaking; wire immediately so hello is not lost
+            try { if (conn) conn.close(); } catch (e) {}
+            conn = null;
+            wireConn(gc);
+          });
+          gamePeer.on('open', function () {
+            onMatched({ role: 'host', roomCode: code, peer: gamePeer, oppName: msg.name || 'Opponent' });
+            c.send({ type: 'mm-join', roomCode: code, hostName: name });
+            setTimeout(function () { cleanupLobby(); }, 200);
+          });
+          gamePeer.on('error', function (err) {
+            app.error = 'Match host error: ' + ((err && err.type) || 'unknown');
+            matched = false;
+            render();
+          });
+        });
+      });
+    }
+
+    /**
+     * Find a match for {name, rangeMax}.
+     * Calls onDone({role:'host'|'guest', roomCode, peer?, oppName?})
+     * or onDone({kind:'cancelled'}) / onDone({kind:'error', message})
+     */
+    async function findMatch(opts, onDone) {
+      cancelled = false;
+      matchCb = onDone;
+      app.match.active = true;
+      app.match.status = 'scanning';
+      app.match.slot = -1;
+      startElapsed();
+      render();
+
+      var name = opts.name;
+      var rangeMax = opts.rangeMax;
+
+      // Phase 1: scan existing waiters (bail to claim after consecutive empties)
+      var consecutiveEmpty = 0;
+      for (var slot = 0; slot < QUEUE_SLOT_COUNT; slot++) {
+        if (cancelled) {
+          stopTimer();
+          return onDone({ kind: 'cancelled' });
+        }
+        app.match.status = 'scanning';
+        app.match.slot = slot;
+        render();
+        var res = await tryConnectSlot(rangeMax, slot, name);
+        if (cancelled) {
+          stopTimer();
+          return onDone({ kind: 'cancelled' });
+        }
+        if (res.kind === 'join') {
+          stopTimer();
+          cleanupScan();
+          cleanupLobby();
+          app.match.active = false;
+          app.match.status = 'matched';
+          return onDone({
+            role: 'guest',
+            roomCode: res.roomCode,
+            oppName: res.hostName
+          });
+        }
+        if (res.kind === 'empty' || res.kind === 'timeout' || res.kind === 'error') {
+          consecutiveEmpty += 1;
+          if (consecutiveEmpty >= 3) break; // queue looks empty — claim a slot
+        } else {
+          consecutiveEmpty = 0; // busy etc. keep scanning
+        }
+      }
+
+      // Phase 2: claim a free lobby slot and wait
+      for (var s = 0; s < QUEUE_SLOT_COUNT; s++) {
+        if (cancelled) {
+          stopTimer();
+          return onDone({ kind: 'cancelled' });
+        }
+        var claim = await claimSlot(rangeMax, s);
+        if (cancelled) {
+          stopTimer();
+          return onDone({ kind: 'cancelled' });
+        }
+        if (claim.kind === 'claimed') {
+          app.match.status = 'waiting';
+          app.match.slot = s;
+          render();
+          hostLobby(claim.peer, s, rangeMax, name, function (match) {
+            stopTimer();
+            app.match.active = false;
+            onDone(match);
+          });
+          return; // waiting asynchronously
+        }
+      }
+
+      stopTimer();
+      app.match.active = false;
+      onDone({ kind: 'error', message: 'All matchmaking slots busy. Try again.' });
+    }
+
+    return {
+      findMatch: findMatch,
+      cancel: cancel,
+      lobbyId: lobbyId,
+      QUEUE_SLOT_COUNT: QUEUE_SLOT_COUNT,
+      QUEUE_SLOT_TIMEOUT_MS: QUEUE_SLOT_TIMEOUT_MS
+    };
+  })();
+
+  function setStatus(s) {
+    app.connStatus = s;
+    render();
+  }
+
+  function wireConn(c) {
+    conn = c;
+    c.on('data', onData);
+    c.on('open', function () {
+      setStatus('connected');
+      if (app.role === 'guest') {
+        send({ type: 'hello', name: app.myName, role: 'guest' });
+      }
+    });
+    c.on('close', function () {
+      setStatus('disconnected');
+      scheduleReconnect();
+    });
+    c.on('error', function (err) {
+      app.error = (err && err.message) || 'Connection error';
+      setStatus('disconnected');
+      render();
+    });
+  }
+
+  function scheduleReconnect() {
+    if (app.phase === 'win' || app.mode === 'local' || app.mode === 'home') return;
+    if (reconnectTimer) return;
+    reconnectTimer = setTimeout(function () {
+      reconnectTimer = null;
+      if (app.role === 'guest' && app.roomCode && app.connStatus !== 'connected') {
+        setStatus('connecting');
+        tryConnectAsGuest();
+      }
+    }, 2000);
+  }
+
+  function destroyPeer() {
+    destroyed = true;
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    try { if (conn) conn.close(); } catch (e) {}
+    try { if (peer) peer.destroy(); } catch (e) {}
+    conn = null;
+    peer = null;
+  }
+
+  function createHost() {
+    destroyPeer();
+    destroyed = false;
+    app.role = 'host';
+    app.myIndex = 0;
+    var pendingCode = genCode();
+    app.roomCode = '';
+    app.connStatus = 'connecting';
+    app.phase = 'wait';
+    app.error = '';
+    app.oppName = '';
+    app.oppLocked = false;
+    app.locked = false;
+    app.mySecret = null;
+    app.oppSecret = null;
+    render();
+
+    var id = PEER_ID_PREFIX + pendingCode;
+    peer = PeerFactory(id, peerOptions());
+    peer.on('open', function () {
+      app.roomCode = pendingCode;
+      app.connStatus = 'connecting'; // waiting for opponent
+      render();
+    });
+    peer.on('connection', function (c) {
+      if (conn && conn.open) {
+        // already have someone
+        c.on('open', function () {
+          c.send({ type: 'error', message: 'Room already has a player.' });
+          setTimeout(function () { c.close(); }, 300);
+        });
+        return;
+      }
+      wireConn(c);
+      // welcome sent after hello from guest, or immediately if already open
+      c.on('open', function () {
+        // wait for hello to get name
+      });
+    });
+    peer.on('error', function (err) {
+      var msg = (err && err.type) || (err && err.message) || 'Peer error';
+      if (String(msg).indexOf('unavailable-id') >= 0 || String(msg) === 'unavailable-id') {
+        app.error = 'Room code taken. Creating a new one…';
+        render();
+        setTimeout(createHost, 400);
+        return;
+      }
+      app.error = 'Could not create room: ' + msg;
+      setStatus('disconnected');
+      render();
+    });
+  }
+
+  function tryConnectAsGuest() {
+    if (!app.roomCode) return;
+    destroyPeer();
+    destroyed = false;
+    app.role = 'guest';
+    app.myIndex = 1;
+    app.connStatus = 'connecting';
+    app.error = '';
+    render();
+
+    peer = PeerFactory(peerOptions()); // ephemeral id
+    peer.on('open', function () {
+      var hostId = PEER_ID_PREFIX + app.roomCode;
+      var c = peer.connect(hostId, { reliable: true });
+      wireConn(c);
+      // timeout if host not found
+      setTimeout(function () {
+        if (app.connStatus === 'connecting' && (!conn || !conn.open)) {
+          app.error = 'Room not found. Check the code and try again.';
+          setStatus('disconnected');
+          render();
+        }
+      }, 8000);
+    });
+    peer.on('error', function (err) {
+      var msg = (err && err.type) || (err && err.message) || 'Peer error';
+      if (String(msg).indexOf('peer-unavailable') >= 0 || String(msg) === 'peer-unavailable') {
+        app.error = 'Room not found. Check the code and try again.';
+      } else {
+        app.error = 'Could not join: ' + msg;
+      }
+      setStatus('disconnected');
+      render();
+    });
+  }
+
+  function onData(raw) {
+    var msg = raw;
+    if (typeof raw === 'string') {
+      try { msg = JSON.parse(raw); } catch (e) { return; }
+    }
+    logMsg('in', msg);
+    if (!msg || !msg.type) return;
+
+    switch (msg.type) {
+      case 'hello':
+        if (app.role === 'host') {
+          app.oppName = msg.name || 'Player 2';
+          app.starter = Math.random() < 0.5 ? 0 : 1;
+          app.ranges = [
+            { min: 0, max: app.rangeMax },
+            { min: 0, max: app.rangeMax }
+          ];
+          send({
+            type: 'welcome',
+            name: app.myName,
+            rangeMax: app.rangeMax,
+            starter: app.starter
+          });
+          app.phase = 'lock';
+          app.mode = 'online';
+          setStatus('connected');
+          render();
+        }
+        break;
+      case 'welcome':
+        if (app.role === 'guest') {
+          app.oppName = msg.name || 'Player 1';
+          app.rangeMax = msg.rangeMax || 1000;
+          app.starter = msg.starter || 0;
+          app.ranges = [
+            { min: 0, max: app.rangeMax },
+            { min: 0, max: app.rangeMax }
+          ];
+          app.phase = 'lock';
+          app.mode = 'online';
+          setStatus('connected');
+          render();
+        }
+        break;
+      case 'ready':
+        // opponent locked in (no secret in message!)
+        app.oppLocked = true;
+        maybeStartRound();
+        render();
+        break;
+      case 'ask':
+        handleIncomingAsk(msg);
+        break;
+      case 'answer':
+        handleIncomingAnswer(msg);
+        break;
+      case 'revealSecret':
+        // opponent reveals their secret (only on win)
+        app.oppSecret = msg.secret;
+        maybeShowWin();
+        render();
+        break;
+      case 'rematch':
+        beginRematch(false, msg.starter);
+        break;
+      case 'error':
+        app.error = msg.message || 'Error from peer';
+        render();
+        break;
+      default:
+        break;
+    }
+  }
+
+  function maybeStartRound() {
+    if (app.locked && app.oppLocked) {
+      app.currentPlayer = app.starter;
+      app.phase = 'turn';
+      app.history = [];
+      app.turnCount = 0;
+      app.lastAnswer = null;
+      app.pendingAsk = null;
+      app.oppSecret = null;
+      render();
+    } else if (app.locked && !app.oppLocked) {
+      app.phase = 'waitOppLock';
+      render();
+    }
+  }
+
+  function handleIncomingAsk(msg) {
+    // Opponent is asking about MY secret
+    if (app.mySecret == null) return;
+    var answer = evaluateSecret(app.mySecret, msg.askType, msg.x);
+    var entry = {
+      player: oppIndex(), // the asker
+      type: msg.askType,
+      x: msg.x,
+      answer: answer
+    };
+    // Update asker's known range (from our shared history perspective)
+    if (msg.askType !== 'guess') {
+      applyAnswerToRange(app.ranges[oppIndex()], msg.askType, msg.x, answer);
+    }
+    app.history.push(entry);
+    app.turnCount += 1;
+    app.lastAnswer = entry;
+    send({
+      type: 'answer',
+      askType: msg.askType,
+      x: msg.x,
+      answer: answer,
+      turnId: msg.turnId
+    });
+    if (answer === 'exact') {
+      // Win for opponent — reveal secrets
+      app.phase = 'win';
+      send({ type: 'revealSecret', secret: app.mySecret });
+      // We still need their secret
+    } else {
+      app.phase = 'answer';
+      // After continue, turn passes to me
+    }
+    render();
+  }
+
+  function handleIncomingAnswer(msg) {
+    if (!app.pendingAsk) return;
+    var entry = {
+      player: app.myIndex,
+      type: msg.askType,
+      x: msg.x,
+      answer: msg.answer
+    };
+    if (msg.askType !== 'guess') {
+      applyAnswerToRange(app.ranges[app.myIndex], msg.askType, msg.x, msg.answer);
+    }
+    app.history.push(entry);
+    app.turnCount += 1;
+    app.lastAnswer = entry;
+    app.pendingAsk = null;
+    if (msg.answer === 'exact') {
+      app.phase = 'win';
+      send({ type: 'revealSecret', secret: app.mySecret });
+    } else {
+      app.phase = 'answer';
+    }
+    render();
+  }
+
+  function maybeShowWin() {
+    // need both secrets
+    if (app.phase === 'win' && app.mySecret != null && app.oppSecret != null) {
+      render();
+    }
+  }
+
+  function submitOnlineMove() {
+    if (app.currentPlayer !== app.myIndex) return;
+    if (app.phase !== 'turn') return;
+    var type = ui.askMode;
+    var n = parseVal(ui.keypadValue);
+    if (n === null) { ui._warn = 'Enter a number for X.'; render(); return; }
+    if (n < 0 || n > app.rangeMax) { ui._warn = 'X must be between 0 and ' + app.rangeMax + '.'; render(); return; }
+    var pointless = isPointless(myRange(), type, n, app.rangeMax);
+    if (pointless) { ui._warn = pointless; render(); return; }
+    ui._warn = '';
+    var turnId = Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    app.pendingAsk = { askType: type, x: n, turnId: turnId };
+    send({ type: 'ask', askType: type, x: n, turnId: turnId });
+    // Wait for answer — show waiting state lightly
+    ui.keypadValue = '';
+    render();
+  }
+
+  function afterAnswerContinue() {
+    // Pass turn to the other player
+    var last = app.lastAnswer;
+    if (!last) return;
+    if (last.answer === 'exact') return;
+    app.currentPlayer = last.player === 0 ? 1 : 0;
+    app.phase = 'turn';
+    ui.keypadValue = '';
+    ui.askMode = 'higher';
+    ui._warn = '';
+    render();
+  }
+
+  function confirmSecretOnline() {
+    var n = parseVal(ui.keypadValue);
+    if (n === null) { ui._warn = 'Enter a number.'; render(); return; }
+    if (n < 0 || n > app.rangeMax) { ui._warn = 'Must be between 0 and ' + app.rangeMax + '.'; render(); return; }
+    app.mySecret = n;
+    app.locked = true;
+    ui.keypadValue = '';
+    ui.showSecret = false;
+    ui._warn = '';
+    send({ type: 'ready' }); // NO secret!
+    maybeStartRound();
+    render();
+  }
+
+  function beginRematch(initiate, remoteStarter) {
+    app.mySecret = null;
+    app.oppSecret = null;
+    app.locked = false;
+    app.oppLocked = false;
+    app.history = [];
+    app.turnCount = 0;
+    app.lastAnswer = null;
+    app.pendingAsk = null;
+    app.ranges = [
+      { min: 0, max: app.rangeMax },
+      { min: 0, max: app.rangeMax }
+    ];
+    if (initiate) {
+      app.starter = Math.random() < 0.5 ? 0 : 1;
+    } else if (typeof remoteStarter === 'number') {
+      app.starter = remoteStarter;
+    } else {
+      app.starter = Math.random() < 0.5 ? 0 : 1;
+    }
+    app.phase = 'lock';
+    ui = { keypadValue: '', showSecret: false, askMode: 'higher', _warn: '' };
+    if (initiate) {
+      send({ type: 'rematch', starter: app.starter });
+    }
+    render();
+  }
+
+  // When receiving rematch, also sync starter if provided
+  // patch: update onData rematch case - handled in beginRematch(false)
+
+  function shareLink() {
+    var url = location.origin + location.pathname + '?room=' + encodeURIComponent(app.roomCode);
+    if (navigator.share) {
+      navigator.share({ title: 'Hot or Not?', text: 'Join my game: ' + app.roomCode, url: url }).catch(function () {
+        copyText(url);
+      });
+    } else {
+      copyText(url);
+    }
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        app.error = '';
+        ui._copied = true;
+        render();
+        setTimeout(function () { ui._copied = false; render(); }, 1500);
+      }).catch(function () { fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); ui._copied = true; } catch (e) {}
+    document.body.removeChild(ta);
+    render();
+    setTimeout(function () { ui._copied = false; render(); }, 1500);
+  }
+
+  function goHome() {
+    try { Matchmaker.cancel(); } catch (e) {}
+    destroyPeer();
+    app.mode = 'home';
+    app.phase = 'home';
+    app.error = '';
+    app.connStatus = 'idle';
+    app.roomCode = '';
+    app.mySecret = null;
+    app.oppSecret = null;
+    app.locked = false;
+    app.oppLocked = false;
+    app.history = [];
+    app.match.active = false;
+    ui = { keypadValue: '', showSecret: false, askMode: 'higher', _warn: '' };
+    // clear room query
+    if (history.replaceState) {
+      history.replaceState(null, '', location.pathname);
+    }
+    render();
+  }
+
+  // ——— LOCAL pass-and-play (adapted from hot-or-not.html) ———
+  function startLocal() {
+    destroyPeer();
+    app.mode = 'local';
+    app.local = {
+      phase: 'setup',
+      rangeMax: 1000,
+      names: ['Player 1', 'Player 2'],
+      secrets: [null, null],
+      ranges: [{ min: 0, max: 1000 }, { min: 0, max: 1000 }],
+      currentPlayer: 0,
+      history: [],
+      turnCount: 0,
+      lastAnswer: null,
+      pendingHandoffTo: null
+    };
+    ui = { keypadValue: '', showSecret: false, askMode: 'higher', _warn: '' };
+    render();
+  }
+
+  function L() { return app.local; }
+
+  function localSave() {
+    try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(L())); } catch (e) {}
+  }
+
+  // ——— Keypad ———
+  function buildKeypad(opts) {
+    var wrap = el('div', { className: 'keypad' });
+    var keys = ['1','2','3','4','5','6','7','8','9','clear','0','⌫'];
+    keys.forEach(function (k) {
+      var isAction = k === 'clear' || k === '⌫';
+      wrap.appendChild(el('button', {
+        className: 'key' + (isAction ? ' action' : ''),
+        type: 'button',
+        textContent: k === 'clear' ? 'CLR' : k,
+        onClick: function () {
+          if (k === 'clear') ui.keypadValue = '';
+          else if (k === '⌫') ui.keypadValue = ui.keypadValue.slice(0, -1);
+          else {
+            var maxLen = String(app.mode === 'local' ? L().rangeMax : app.rangeMax).length;
+            if (ui.keypadValue.length >= maxLen) return;
+            ui.keypadValue += k;
+          }
+          if (opts && opts.onChange) opts.onChange();
+          else render();
+        }
+      }));
+    });
+    if (opts && opts.confirmLabel) {
+      wrap.appendChild(el('button', {
+        className: 'key confirm',
+        type: 'button',
+        textContent: opts.confirmLabel,
+        disabled: opts.disabled || false,
+        onClick: function () { if (opts.onConfirm) opts.onConfirm(ui.keypadValue); }
+      }));
+    }
+    return wrap;
+  }
+
+  function buildHistory(history) {
+    var wrap = el('div', { className: 'history' });
+    wrap.appendChild(el('div', { className: 'history-title', textContent: 'History' }));
+    if (!history.length) {
+      wrap.appendChild(el('div', { className: 'hint', textContent: 'No moves yet' }));
+      return wrap;
+    }
+    history.slice().reverse().forEach(function (h) {
+      var row = el('div', { className: 'hist-row' });
+      var who = app.mode === 'online'
+        ? (h.player === app.myIndex ? 'You' : 'Opp')
+        : ('P' + (h.player + 1));
+      row.appendChild(el('div', { className: 'hist-who', textContent: who }));
+      var label = h.type === 'higher' ? ('> ' + h.x + '?') : h.type === 'lower' ? ('< ' + h.x + '?') : ('= ' + h.x + '?');
+      var ansText = h.answer === 'yes' ? 'YES' : h.answer === 'no' ? 'NO' : h.answer === 'exact' ? 'WIN' : 'NO';
+      var tile = el('div', { className: 'hist-tile ' + h.answer });
+      tile.appendChild(el('span', { textContent: label }));
+      tile.appendChild(el('span', { className: 'hist-ans', textContent: ansText }));
+      row.appendChild(tile);
+      wrap.appendChild(row);
+    });
+    return wrap;
+  }
+
+  function buildRangeBar(range, rangeMax) {
+    var left = (range.min / rangeMax) * 100;
+    var width = ((range.max - range.min) / rangeMax) * 100;
+    var wrap = el('div', { className: 'range-display' });
+    wrap.appendChild(el('div', { className: 'label', textContent: "Opponent's possible range" }));
+    wrap.appendChild(el('div', { className: 'values', textContent: range.min + ' – ' + range.max }));
+    var bar = el('div', { className: 'range-bar-wrap' });
+    var fill = el('div', { className: 'range-bar-fill' });
+    fill.style.left = left + '%';
+    fill.style.width = Math.max(width, 0.5) + '%';
+    bar.appendChild(fill);
+    wrap.appendChild(bar);
+    return wrap;
+  }
+
+  function statusPill() {
+    if (app.mode !== 'online' && app.mode !== 'create' && app.phase !== 'wait') return null;
+    var label = app.connStatus;
+    if (app.phase === 'wait' && app.role === 'host' && app.connStatus !== 'disconnected') {
+      label = 'connecting';
+    }
+    var text = label === 'connected' ? 'Connected' : label === 'connecting' ? 'Connecting…' : label === 'disconnected' ? 'Opponent disconnected' : '';
+    if (app.phase === 'wait' && app.role === 'host') text = 'Waiting for opponent…';
+    if (!text) return null;
+    return el('div', { className: 'status-pill ' + (app.phase === 'wait' ? 'connecting' : app.connStatus) }, [
+      el('span', { className: 'dot' }),
+      el('span', { textContent: text })
+    ]);
+  }
+
+  // ——— Screens ———
+  function renderHome() {
+    var root = el('div', { className: 'screen active setup-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Hot or Not?' })
+    ]));
+    root.appendChild(el('p', { className: 'tagline', textContent: 'Pick a number. Feel the heat.' }));
+    root.appendChild(el('p', { className: 'hint', textContent: 'Play live on two phones, or pass-and-play on one.' }));
+    if (app.error) root.appendChild(el('div', { className: 'error-banner', textContent: app.error }));
+
+    var actions = el('div', { className: 'home-actions' });
+    actions.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Play a random opponent',
+      onClick: function () { app.mode = 'matchsetup'; app.error = ''; render(); }
+    }));
+    root.appendChild(actions);
+    root.appendChild(el('div', { className: 'mode-label', textContent: 'Play with a friend' }));
+    var friend = el('div', { className: 'home-actions' });
+    friend.appendChild(el('button', {
+      className: 'btn', type: 'button', textContent: 'Create game',
+      onClick: function () { app.mode = 'create'; app.error = ''; render(); }
+    }));
+    friend.appendChild(el('button', {
+      className: 'btn', type: 'button', textContent: 'Join game',
+      onClick: function () { app.mode = 'join'; app.error = ''; render(); }
+    }));
+    root.appendChild(friend);
+    root.appendChild(el('div', { className: 'mode-label', textContent: 'Or' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-ghost', type: 'button', textContent: 'Play on one phone',
+      onClick: startLocal
+    }));
+    return root;
+  }
+
+  function renderMatchSetup() {
+    var root = el('div', { className: 'screen active setup-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Random match' })
+    ]));
+    root.appendChild(el('p', { className: 'hint', textContent: 'Matched only with players who chose the same range.' }));
+    if (app.error) root.appendChild(el('div', { className: 'error-banner', textContent: app.error }));
+    root.appendChild(el('div', { className: 'field' }, [
+      el('label', { textContent: 'Your name' }),
+      el('input', { type: 'text', id: 'mname', value: app.myName || '', maxlength: '16', autocomplete: 'off' })
+    ]));
+    root.appendChild(el('div', { className: 'field' }, [el('label', { textContent: 'Range' })]));
+    var toggles = el('div', { className: 'toggle-group' });
+    [1000, 10000].forEach(function (m) {
+      toggles.appendChild(el('button', {
+        className: 'btn' + (app.rangeMax === m ? ' selected' : ''), type: 'button',
+        textContent: '0 – ' + m.toLocaleString(),
+        onClick: function () { app.rangeMax = m; render(); }
+      }));
+    });
+    root.appendChild(toggles);
+    root.appendChild(el('div', { className: 'spacer' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Find opponent',
+      onClick: function () {
+        var n = (document.getElementById('mname').value || '').trim() || 'Player';
+        app.myName = n;
+        startMatchmaking();
+      }
+    }));
+    root.appendChild(el('div', { className: 'btn-row' }, [
+      el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Back', onClick: goHome })
+    ]));
+    return root;
+  }
+
+  function formatElapsed(sec) {
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function renderMatchmaking() {
+    var root = el('div', { className: 'screen active' });
+    var card = el('div', { className: 'waiting-card' });
+    card.appendChild(el('h2', { textContent: 'Looking for an opponent…' }));
+    card.appendChild(el('div', { className: 'status-pill connecting' }, [
+      el('span', { className: 'dot' }),
+      el('span', { textContent: app.match.status === 'waiting' ? 'In queue' : 'Searching…' })
+    ]));
+    card.appendChild(el('p', {
+      className: 'hint',
+      textContent: 'Range 0–' + app.rangeMax + ' · ' + formatElapsed(app.match.elapsed || 0)
+    }));
+    if (app.error) card.appendChild(el('div', { className: 'error-banner', textContent: app.error }));
+    card.appendChild(el('button', {
+      className: 'btn btn-ghost', type: 'button', textContent: 'Cancel',
+      onClick: function () {
+        Matchmaker.cancel();
+        goHome();
+      }
+    }));
+    root.appendChild(card);
+    return root;
+  }
+
+  function startMatchmaking() {
+    destroyPeer();
+    app.mode = 'match';
+    app.phase = 'matchmaking';
+    app.error = '';
+    app.oppName = '';
+    app.locked = false;
+    app.oppLocked = false;
+    app.mySecret = null;
+    app.oppSecret = null;
+    render();
+
+    Matchmaker.findMatch({ name: app.myName, rangeMax: app.rangeMax }, function (result) {
+      if (!result || result.kind === 'cancelled') {
+        return;
+      }
+      if (result.kind === 'error') {
+        app.error = result.message || 'Matchmaking failed';
+        app.mode = 'matchsetup';
+        app.phase = 'home';
+        render();
+        return;
+      }
+      // Matched!
+      if (result.role === 'guest') {
+        app.roomCode = result.roomCode;
+        app.oppName = result.oppName || '';
+        app.role = 'guest';
+        app.myIndex = 1;
+        app.phase = 'wait';
+        app.mode = 'online';
+        tryConnectAsGuest();
+      } else if (result.role === 'host') {
+        // Game peer from matchmaker; connection may already be wired in hostLobby
+        peer = result.peer;
+        destroyed = false;
+        app.roomCode = result.roomCode;
+        app.oppName = result.oppName || '';
+        app.role = 'host';
+        app.myIndex = 0;
+        app.phase = 'wait';
+        app.mode = 'online';
+        if (conn && conn.open) {
+          app.connStatus = 'connected';
+        } else {
+          app.connStatus = 'connecting';
+          peer.on('connection', function (c) {
+            if (conn && conn.open) {
+              c.on('open', function () {
+                c.send({ type: 'error', message: 'Room already has a player.' });
+                setTimeout(function () { c.close(); }, 300);
+              });
+              return;
+            }
+            wireConn(c);
+          });
+        }
+        peer.on('error', function (err) {
+          app.error = 'Host error: ' + ((err && err.type) || 'unknown');
+          render();
+        });
+        render();
+      }
+    });
+  }
+
+  function renderCreate() {
+    var root = el('div', { className: 'screen active setup-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Create game' })
+    ]));
+    root.appendChild(el('div', { className: 'field' }, [
+      el('label', { textContent: 'Your name' }),
+      el('input', { type: 'text', id: 'cname', value: app.myName || '', maxlength: '16', autocomplete: 'off' })
+    ]));
+    root.appendChild(el('div', { className: 'field' }, [el('label', { textContent: 'Range' })]));
+    var toggles = el('div', { className: 'toggle-group' });
+    [1000, 10000].forEach(function (m) {
+      toggles.appendChild(el('button', {
+        className: 'btn' + (app.rangeMax === m ? ' selected' : ''), type: 'button',
+        textContent: '0 – ' + m.toLocaleString(),
+        onClick: function () { app.rangeMax = m; render(); }
+      }));
+    });
+    root.appendChild(toggles);
+    root.appendChild(el('div', { className: 'spacer' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Create room',
+      onClick: function () {
+        var n = (document.getElementById('cname').value || '').trim() || 'Player 1';
+        app.myName = n;
+        createHost();
+      }
+    }));
+    root.appendChild(el('div', { className: 'btn-row' }, [
+      el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Back', onClick: goHome })
+    ]));
+    return root;
+  }
+
+  function renderJoin() {
+    var root = el('div', { className: 'screen active setup-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Join game' })
+    ]));
+    if (app.error) root.appendChild(el('div', { className: 'error-banner', textContent: app.error }));
+    root.appendChild(el('div', { className: 'field' }, [
+      el('label', { textContent: 'Your name' }),
+      el('input', { type: 'text', id: 'jname', value: app.myName || '', maxlength: '16', autocomplete: 'off' })
+    ]));
+    root.appendChild(el('div', { className: 'field' }, [
+      el('label', { textContent: 'Room code' }),
+      el('input', {
+        type: 'text', id: 'jcode', className: 'room-code-input', value: app.roomCode || '', maxlength: '5', autocomplete: 'off'
+      })
+    ]));
+    root.appendChild(el('div', { className: 'spacer' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Join',
+      onClick: function () {
+        var n = (document.getElementById('jname').value || '').trim() || 'Player 2';
+        var code = (document.getElementById('jcode').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (code.length < 4) { app.error = 'Enter the 5-character room code.'; render(); return; }
+        app.myName = n;
+        app.roomCode = code;
+        app.phase = 'wait';
+        app.mode = 'online';
+        tryConnectAsGuest();
+      }
+    }));
+    root.appendChild(el('div', { className: 'btn-row' }, [
+      el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Back', onClick: goHome })
+    ]));
+    return root;
+  }
+
+  function renderWaitHost() {
+    var root = el('div', { className: 'screen active' });
+    var card = el('div', { className: 'waiting-card' });
+    card.appendChild(el('h2', { textContent: 'Room ready' }));
+    card.appendChild(statusPill());
+    card.appendChild(el('p', { className: 'hint', textContent: 'Share this code with your opponent' }));
+    card.appendChild(el('div', { className: 'room-code', textContent: app.roomCode }));
+    card.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button',
+      textContent: ui._copied ? 'Link copied!' : 'Share link',
+      onClick: shareLink
+    }));
+    if (app.error) card.appendChild(el('div', { className: 'error-banner', textContent: app.error }));
+    card.appendChild(el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Cancel', onClick: goHome }));
+    root.appendChild(card);
+    return root;
+  }
+
+  function renderWaitGuest() {
+    var root = el('div', { className: 'screen active' });
+    var card = el('div', { className: 'waiting-card' });
+    card.appendChild(el('h2', { textContent: 'Joining ' + app.roomCode }));
+    card.appendChild(statusPill());
+    if (app.error) card.appendChild(el('div', { className: 'error-banner', textContent: app.error }));
+    card.appendChild(el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Cancel', onClick: goHome }));
+    root.appendChild(card);
+    return root;
+  }
+
+  function renderOnlineLock() {
+    var root = el('div', { className: 'screen active lock-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Secret Number' })
+    ]));
+    root.appendChild(statusPill());
+    var who = app.myIndex === 0 ? 'p1' : 'p2';
+    root.appendChild(el('div', {
+      className: 'turn-bar ' + who,
+      textContent: app.myName + ' — pick your secret (0–' + app.rangeMax + ')'
+    }));
+    var starterName = app.starter === app.myIndex ? 'You' : app.oppName;
+    root.appendChild(el('p', { className: 'hint', textContent: starterName + ' will go first.' }));
+    var disp = el('div', { className: 'secret-display' });
+    disp.appendChild(el('span', {
+      className: 'digits' + (ui.keypadValue ? '' : ' placeholder'),
+      textContent: maskDigits(ui.keypadValue, ui.showSecret)
+    }));
+    disp.appendChild(el('button', {
+      className: 'eye-btn', type: 'button',
+      textContent: ui.showSecret ? '🙈' : '👁',
+      onClick: function () { ui.showSecret = !ui.showSecret; render(); }
+    }));
+    root.appendChild(disp);
+    root.appendChild(el('div', { className: 'warn', textContent: ui._warn || '' }));
+    root.appendChild(buildKeypad({
+      confirmLabel: 'Confirm secret',
+      onChange: function () { render(); },
+      onConfirm: confirmSecretOnline
+    }));
+    return root;
+  }
+
+  function renderWaitOppLock() {
+    var root = el('div', { className: 'screen active' });
+    var card = el('div', { className: 'waiting-card' });
+    card.appendChild(el('h2', { textContent: 'Secret locked' }));
+    card.appendChild(statusPill());
+    card.appendChild(el('p', { className: 'hint', textContent: 'Waiting for ' + (app.oppName || 'opponent') + ' to lock in…' }));
+    root.appendChild(card);
+    return root;
+  }
+
+  function renderOnlineTurn() {
+    var myTurn = app.currentPlayer === app.myIndex;
+    var root = el('div', { className: 'screen active turn-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Hot or Not?' })
+    ]));
+    root.appendChild(statusPill());
+    if (myTurn) {
+      root.appendChild(el('div', {
+        className: 'turn-bar ' + (app.myIndex === 0 ? 'p1' : 'p2'),
+        textContent: 'Your turn'
+      }));
+    } else {
+      root.appendChild(el('div', {
+        className: 'turn-bar waiting',
+        textContent: 'Waiting for ' + (app.oppName || 'opponent') + '…'
+      }));
+    }
+    root.appendChild(buildRangeBar(myRange(), app.rangeMax));
+
+    if (myTurn && !app.pendingAsk) {
+      var tabs = el('div', { className: 'mode-tabs' });
+      [{ id: 'higher', label: 'Higher than?' }, { id: 'lower', label: 'Lower than?' }, { id: 'guess', label: 'Exact guess' }].forEach(function (m) {
+        tabs.appendChild(el('button', {
+          className: 'btn' + (ui.askMode === m.id ? ' active' : ''), type: 'button', textContent: m.label,
+          onClick: function () { ui.askMode = m.id; ui._warn = ''; render(); }
+        }));
+      });
+      root.appendChild(tabs);
+      root.appendChild(el('div', { className: 'secret-display' }, [
+        el('span', {
+          className: 'digits' + (ui.keypadValue ? '' : ' placeholder'),
+          textContent: ui.keypadValue || 'X'
+        })
+      ]));
+      root.appendChild(el('div', { className: 'warn', textContent: ui._warn || '' }));
+      root.appendChild(buildKeypad({
+        confirmLabel: ui.askMode === 'guess' ? 'Guess!' : 'Ask',
+        onChange: function () { render(); },
+        onConfirm: submitOnlineMove
+      }));
+    } else if (app.pendingAsk) {
+      root.appendChild(el('p', { className: 'hint', textContent: 'Waiting for answer…' }));
+    }
+
+    root.appendChild(buildHistory(app.history));
+    root.appendChild(el('div', { className: 'new-game-link' }, [
+      el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Leave game', onClick: goHome })
+    ]));
+    return root;
+  }
+
+  function renderOnlineAnswer() {
+    var entry = app.lastAnswer;
+    var root = el('div', { className: 'screen active turn-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Hot or Not?' })
+    ]));
+    var askerName = entry.player === app.myIndex ? 'You' : app.oppName;
+    var label = entry.type === 'higher' ? ('Higher than ' + entry.x + '?') : entry.type === 'lower' ? ('Lower than ' + entry.x + '?') : ('Exact guess: ' + entry.x);
+    root.appendChild(el('p', { className: 'hint', textContent: askerName + ' asked: ' + label }));
+    var tileClass = 'answer-tile show ';
+    var tileText = '';
+    if (entry.answer === 'yes') { tileClass += 'yes'; tileText = 'YES'; }
+    else if (entry.answer === 'no') { tileClass += 'no'; tileText = 'NO'; }
+    else if (entry.answer === 'miss') { tileClass += 'miss'; tileText = 'NOT IT'; }
+    else { tileClass += 'exact'; tileText = 'YES!'; }
+    root.appendChild(el('div', { className: tileClass, textContent: tileText }));
+    if (entry.type !== 'guess') root.appendChild(buildRangeBar(myRange(), app.rangeMax));
+    root.appendChild(buildHistory(app.history));
+    root.appendChild(el('div', { className: 'spacer' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Continue',
+      onClick: afterAnswerContinue
+    }));
+    return root;
+  }
+
+  function renderOnlineWin() {
+    var last = app.lastAnswer;
+    var winnerIdx = last ? last.player : 0;
+    var winnerName = winnerIdx === app.myIndex ? app.myName : app.oppName;
+    var root = el('div', { className: 'screen active' });
+    var win = el('div', { className: 'win-screen' });
+    win.appendChild(el('h2', { textContent: winnerName + ' wins!' }));
+    win.appendChild(el('p', { className: 'stat', textContent: app.turnCount + ' turn' + (app.turnCount === 1 ? '' : 's') }));
+    var reveal = el('div', { className: 'reveal' });
+    if (app.oppSecret == null) {
+      reveal.appendChild(el('div', { textContent: 'Waiting for secret reveal…' }));
+    } else {
+      var myLabel = app.myName + "'s number: " + app.mySecret;
+      var oppLabel = app.oppName + "'s number: " + app.oppSecret;
+      if (app.myIndex === 0) {
+        reveal.appendChild(el('div', { textContent: myLabel }));
+        reveal.appendChild(el('div', { textContent: oppLabel }));
+      } else {
+        reveal.appendChild(el('div', { textContent: oppLabel }));
+        reveal.appendChild(el('div', { textContent: myLabel }));
+      }
+    }
+    win.appendChild(reveal);
+    win.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Rematch',
+      onClick: function () { beginRematch(true); }
+    }));
+    win.appendChild(el('button', {
+      className: 'btn btn-ghost', type: 'button', textContent: 'Leave',
+      onClick: goHome
+    }));
+    root.appendChild(win);
+    return root;
+  }
+
+  // ——— Local mode screens (compact reuse) ———
+  function renderLocal() {
+    var s = L();
+    if (!s) return renderHome();
+    if (s.phase === 'setup') return renderLocalSetup();
+    if (s.phase === 'lock1') return renderLocalLock(0);
+    if (s.phase === 'pass2') return renderLocalCover({
+      title: 'Pass to ' + s.names[1],
+      sub: "Hand the phone over. Don't peek at their secret!",
+      button: "I'm " + s.names[1] + ' — lock in my number',
+      onContinue: function () { s.phase = 'lock2'; ui.keypadValue = ''; ui.showSecret = false; localSave(); render(); }
+    });
+    if (s.phase === 'lock2') return renderLocalLock(1);
+    if (s.phase === 'pass1start') return renderLocalCover({
+      title: 'Pass to ' + s.names[0],
+      sub: s.names[0] + ' goes first.',
+      button: "I'm " + s.names[0] + ', show my turn',
+      onContinue: function () { s.currentPlayer = 0; s.phase = 'turn'; ui.keypadValue = ''; ui.askMode = 'higher'; localSave(); render(); }
+    });
+    if (s.phase === 'handoff') {
+      var p = s.pendingHandoffTo;
+      return renderLocalCover({
+        title: 'Pass to ' + s.names[p],
+        sub: 'Hand the phone over for the next turn.',
+        button: "I'm " + s.names[p] + ', show my turn',
+        onContinue: function () { s.phase = 'turn'; ui.keypadValue = ''; ui.askMode = 'higher'; ui._warn = ''; localSave(); render(); }
+      });
+    }
+    if (s.phase === 'turn') return renderLocalTurn();
+    if (s.phase === 'answer') return renderLocalAnswer();
+    if (s.phase === 'win') return renderLocalWin();
+    return renderLocalSetup();
+  }
+
+  function renderLocalSetup() {
+    var s = L();
+    var root = el('div', { className: 'screen active setup-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Hot or Not?' })
+    ]));
+    root.appendChild(el('p', { className: 'tagline', textContent: 'Pick a number. Feel the heat.' }));
+    root.appendChild(el('p', { className: 'hint', textContent: 'Pass-and-play on this phone.' }));
+    root.appendChild(el('div', { className: 'field' }, [el('label', { textContent: 'Range' })]));
+    var toggles = el('div', { className: 'toggle-group' });
+    [1000, 10000].forEach(function (m) {
+      toggles.appendChild(el('button', {
+        className: 'btn' + (s.rangeMax === m ? ' selected' : ''), type: 'button',
+        textContent: '0 – ' + m.toLocaleString(),
+        onClick: function () { s.rangeMax = m; render(); }
+      }));
+    });
+    root.appendChild(toggles);
+    root.appendChild(el('div', { className: 'field' }, [
+      el('label', { textContent: 'Player 1 name' }),
+      el('input', { type: 'text', id: 'name0', value: s.names[0], maxlength: '16', autocomplete: 'off' })
+    ]));
+    root.appendChild(el('div', { className: 'field' }, [
+      el('label', { textContent: 'Player 2 name' }),
+      el('input', { type: 'text', id: 'name1', value: s.names[1], maxlength: '16', autocomplete: 'off' })
+    ]));
+    root.appendChild(el('div', { className: 'spacer' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Start',
+      onClick: function () {
+        s.names = [
+          (document.getElementById('name0').value || '').trim() || 'Player 1',
+          (document.getElementById('name1').value || '').trim() || 'Player 2'
+        ];
+        s.ranges = [{ min: 0, max: s.rangeMax }, { min: 0, max: s.rangeMax }];
+        s.phase = 'lock1';
+        ui.keypadValue = ''; ui.showSecret = false;
+        localSave(); render();
+      }
+    }));
+    root.appendChild(el('div', { className: 'btn-row' }, [
+      el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Back', onClick: goHome })
+    ]));
+    return root;
+  }
+
+  function renderLocalLock(playerIndex) {
+    var s = L();
+    var root = el('div', { className: 'screen active lock-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Secret Number' })
+    ]));
+    root.appendChild(el('div', {
+      className: 'turn-bar ' + (playerIndex === 0 ? 'p1' : 'p2'),
+      textContent: s.names[playerIndex] + ' — pick your secret (0–' + s.rangeMax + ')'
+    }));
+    var disp = el('div', { className: 'secret-display' });
+    disp.appendChild(el('span', {
+      className: 'digits' + (ui.keypadValue ? '' : ' placeholder'),
+      textContent: maskDigits(ui.keypadValue, ui.showSecret)
+    }));
+    disp.appendChild(el('button', {
+      className: 'eye-btn', type: 'button', textContent: ui.showSecret ? '🙈' : '👁',
+      onClick: function () { ui.showSecret = !ui.showSecret; render(); }
+    }));
+    root.appendChild(disp);
+    root.appendChild(el('div', { className: 'warn', textContent: ui._warn || '' }));
+    root.appendChild(buildKeypad({
+      confirmLabel: 'Confirm secret',
+      onChange: function () { render(); },
+      onConfirm: function (val) {
+        var n = parseVal(val);
+        if (n === null) { ui._warn = 'Enter a number.'; render(); return; }
+        if (n < 0 || n > s.rangeMax) { ui._warn = 'Must be between 0 and ' + s.rangeMax + '.'; render(); return; }
+        s.secrets[playerIndex] = n;
+        ui.keypadValue = ''; ui.showSecret = false; ui._warn = '';
+        s.phase = playerIndex === 0 ? 'pass2' : 'pass1start';
+        localSave(); render();
+      }
+    }));
+    return root;
+  }
+
+  function renderLocalCover(opts) {
+    var root = el('div', { className: 'screen active' });
+    var cover = el('div', { className: 'cover' });
+    cover.appendChild(el('h2', { textContent: opts.title }));
+    if (opts.sub) cover.appendChild(el('p', { textContent: opts.sub }));
+    cover.appendChild(el('button', { className: 'btn btn-primary', type: 'button', textContent: opts.button, onClick: opts.onContinue }));
+    cover.appendChild(el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Leave', onClick: goHome }));
+    root.appendChild(cover);
+    return root;
+  }
+
+  function renderLocalTurn() {
+    var s = L();
+    var player = s.currentPlayer;
+    var root = el('div', { className: 'screen active turn-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Hot or Not?' })
+    ]));
+    root.appendChild(el('div', {
+      className: 'turn-bar ' + (player === 0 ? 'p1' : 'p2'),
+      textContent: s.names[player] + "'s turn"
+    }));
+    root.appendChild(buildRangeBar(s.ranges[player], s.rangeMax));
+    var tabs = el('div', { className: 'mode-tabs' });
+    [{ id: 'higher', label: 'Higher than?' }, { id: 'lower', label: 'Lower than?' }, { id: 'guess', label: 'Exact guess' }].forEach(function (m) {
+      tabs.appendChild(el('button', {
+        className: 'btn' + (ui.askMode === m.id ? ' active' : ''), type: 'button', textContent: m.label,
+        onClick: function () { ui.askMode = m.id; ui._warn = ''; render(); }
+      }));
+    });
+    root.appendChild(tabs);
+    root.appendChild(el('div', { className: 'secret-display' }, [
+      el('span', { className: 'digits' + (ui.keypadValue ? '' : ' placeholder'), textContent: ui.keypadValue || 'X' })
+    ]));
+    root.appendChild(el('div', { className: 'warn', textContent: ui._warn || '' }));
+    root.appendChild(buildKeypad({
+      confirmLabel: ui.askMode === 'guess' ? 'Guess!' : 'Ask',
+      onChange: function () { render(); },
+      onConfirm: function () {
+        var type = ui.askMode;
+        var n = parseVal(ui.keypadValue);
+        if (n === null) { ui._warn = 'Enter a number for X.'; render(); return; }
+        if (n < 0 || n > s.rangeMax) { ui._warn = 'X must be between 0 and ' + s.rangeMax + '.'; render(); return; }
+        var pointless = isPointless(s.ranges[player], type, n, s.rangeMax);
+        if (pointless) { ui._warn = pointless; render(); return; }
+        ui._warn = '';
+        var opp = player === 0 ? 1 : 0;
+        var answer = evaluateSecret(s.secrets[opp], type, n);
+        var entry = { player: player, type: type, x: n, answer: answer };
+        s.history.push(entry);
+        s.turnCount += 1;
+        s.lastAnswer = entry;
+        if (type !== 'guess') applyAnswerToRange(s.ranges[player], type, n, answer);
+        if (answer === 'exact') s.phase = 'win';
+        else s.phase = 'answer';
+        localSave(); render();
+      }
+    }));
+    root.appendChild(buildHistory(s.history));
+    return root;
+  }
+
+  function renderLocalAnswer() {
+    var s = L();
+    var entry = s.lastAnswer;
+    var root = el('div', { className: 'screen active turn-body' });
+    root.appendChild(el('header', { className: 'top' }, [
+      el('h1', { innerHTML: '<span class="brand-mark" aria-hidden="true"></span>Hot or Not?' })
+    ]));
+    var label = entry.type === 'higher' ? ('Higher than ' + entry.x + '?') : entry.type === 'lower' ? ('Lower than ' + entry.x + '?') : ('Exact guess: ' + entry.x);
+    root.appendChild(el('p', { className: 'hint', textContent: s.names[entry.player] + ' asked: ' + label }));
+    var tileClass = 'answer-tile show ';
+    var tileText = entry.answer === 'yes' ? 'YES' : entry.answer === 'no' ? 'NO' : entry.answer === 'miss' ? 'NOT IT' : 'YES!';
+    tileClass += entry.answer === 'miss' ? 'miss' : entry.answer === 'no' ? 'no' : 'yes';
+    root.appendChild(el('div', { className: tileClass, textContent: tileText }));
+    root.appendChild(buildHistory(s.history));
+    root.appendChild(el('div', { className: 'spacer' }));
+    root.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Continue',
+      onClick: function () {
+        var next = entry.player === 0 ? 1 : 0;
+        s.currentPlayer = next;
+        s.pendingHandoffTo = next;
+        s.phase = 'handoff';
+        ui.keypadValue = ''; ui.askMode = 'higher'; ui._warn = '';
+        localSave(); render();
+      }
+    }));
+    return root;
+  }
+
+  function renderLocalWin() {
+    var s = L();
+    var last = s.lastAnswer;
+    var winnerIdx = last ? last.player : 0;
+    var root = el('div', { className: 'screen active' });
+    var win = el('div', { className: 'win-screen' });
+    win.appendChild(el('h2', { textContent: s.names[winnerIdx] + ' wins!' }));
+    win.appendChild(el('p', { className: 'stat', textContent: s.turnCount + ' turns' }));
+    var reveal = el('div', { className: 'reveal' });
+    reveal.appendChild(el('div', { textContent: s.names[0] + "'s number: " + s.secrets[0] }));
+    reveal.appendChild(el('div', { textContent: s.names[1] + "'s number: " + s.secrets[1] }));
+    win.appendChild(reveal);
+    win.appendChild(el('button', {
+      className: 'btn btn-primary', type: 'button', textContent: 'Play again',
+      onClick: function () {
+        var names = s.names.slice();
+        var rangeMax = s.rangeMax;
+        app.local = {
+          phase: 'lock1', rangeMax: rangeMax, names: names, secrets: [null, null],
+          ranges: [{ min: 0, max: rangeMax }, { min: 0, max: rangeMax }],
+          currentPlayer: 0, history: [], turnCount: 0, lastAnswer: null, pendingHandoffTo: null
+        };
+        ui = { keypadValue: '', showSecret: false, askMode: 'higher', _warn: '' };
+        localSave(); render();
+      }
+    }));
+    win.appendChild(el('button', { className: 'btn btn-ghost', type: 'button', textContent: 'Leave', onClick: goHome }));
+    root.appendChild(win);
+    return root;
+  }
+
+  function render() {
+    var mount = document.getElementById('app');
+    mount.innerHTML = '';
+    var view;
+    if (app.mode === 'home') view = renderHome();
+    else if (app.mode === 'matchsetup') view = renderMatchSetup();
+    else if (app.mode === 'match' || app.phase === 'matchmaking') view = renderMatchmaking();
+    else if (app.mode === 'create') view = renderCreate();
+    else if (app.mode === 'join') view = renderJoin();
+    else if (app.mode === 'local') view = renderLocal();
+    else if (app.phase === 'wait' && app.role === 'host') view = renderWaitHost();
+    else if (app.phase === 'wait') view = renderWaitGuest();
+    else if (app.phase === 'lock') view = renderOnlineLock();
+    else if (app.phase === 'waitOppLock') view = renderWaitOppLock();
+    else if (app.phase === 'turn') view = renderOnlineTurn();
+    else if (app.phase === 'answer') view = renderOnlineAnswer();
+    else if (app.phase === 'win') view = renderOnlineWin();
+    else view = renderHome();
+    mount.appendChild(view);
+  }
+
+  // Expose for tests
+  window.__HotOrNotOnline = {
+    getApp: function () { return app; },
+    getUi: function () { return ui; },
+    getMsgLog: function () { return app.msgLog.slice(); },
+    PEER_BROKER: PEER_BROKER,
+    TRANSPORT_MODE: TRANSPORT_MODE,
+    Matchmaker: Matchmaker,
+    QUEUE_SLOT_COUNT: QUEUE_SLOT_COUNT,
+    clearBroadcastPeers: function () { try { localStorage.removeItem("hotornot-bcast-peers-v1"); } catch (e) {} },
+    render: render,
+    goHome: goHome,
+    evaluateSecret: evaluateSecret,
+    startMatchmaking: startMatchmaking
+  };
+
+  // Boot: check ?room=
+  var params = new URLSearchParams(location.search);
+  var roomParam = params.get('room');
+  if (roomParam) {
+    app.mode = 'join';
+    app.roomCode = roomParam.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  }
+  render();
+})();
+
+</script>
+</body>
+</html>
